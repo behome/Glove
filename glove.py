@@ -51,11 +51,29 @@ class GloveModel:
         log_cooccurrences = tf.log(self.cooccurrence_count)
 
         distance_expr = tf.square(tf.add_n([
-            embedding_product, focal_bias, context_bias, tf.negative(log_cooccurrences)
+            embedding_product, f_b, c_b, tf.negative(log_cooccurrences)
         ]))
         self.loss = tf.reduce_sum(tf.multiply(weight_factor, distance_expr))
+        self.final_embedding = tf.add(focal_embedding, context_embedding)
 
     def train(self):
         pass
 
 
+def _context_window(region, left_size, right_size):
+    for i, word in enumerate(region):
+        start_index = i - left_size
+        end_index = i + right_size
+        left_context = region[max(start_index, 0):min(i-1, len(region))+1]
+        right_context = region[max(i+1, 0):min(end_index, len(region))+1]
+        yield left_context, word, right_context
+
+
+if __name__ == '__main__':
+    model = GloveModel(hparams)
+    region = 'abcdefg'
+    fc = _context_window(region, 2, 2)
+    for i in range(len(region)-1):
+        fc.__next__()
+    left_context, word, right_context = fc.__next__()
+    print(left_context, word, right_context)
