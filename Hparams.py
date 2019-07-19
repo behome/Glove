@@ -11,8 +11,8 @@ import tensorflow as tf
 hparams = tf.contrib.training.HParams(
     embedding_size=300,
     vocab_size=7000,
-    left_context_size=10,
-    right_context_size=10,
+    left_context_size=3,
+    right_context_size=3,
     batch_size=512,
     scaling_factor=0.75,
     learning_rate=0.05,
