@@ -11,6 +11,7 @@ import os
 from collections import Counter, defaultdict
 from random import shuffle
 import tensorflow as tf
+import codecs
 
 
 from Hparams import hparams
@@ -29,7 +30,7 @@ class GloveModel:
         coocurrence_counts = defaultdict(float)
         for region in corpus:
             word_count.update(region)
-            for left_context, word, right_context in _context_window(region, self._hparams.left_size, self._hparams.right_size):
+            for left_context, word, right_context in _context_window(region, self._hparams.left_context_size, self._hparams.right_context_size):
                 for i, context_word in enumerate(left_context):
                     coocurrence_counts[(word, context_word)] += 1 / (i + 1)
                 for i, context_word in enumerate(right_context):
@@ -40,7 +41,7 @@ class GloveModel:
                       if count >= self._hparams.min_occurrences]
         self.word_to_id = {word: i for i, word in enumerate(self.words)}
         self.cooccurrence_matrix = {
-            (self.word_to_id[word[0]], self.word_to_id[word[1]]):count
+            (self.word_to_id[words[0]], self.word_to_id[words[1]]):count
             for words, count in coocurrence_counts.items()
             if words[0] in self.word_to_id and words[1] in self.word_to_id
         }
@@ -125,9 +126,11 @@ def _batchify(batch_size, *sequences):
 
 if __name__ == '__main__':
     model = GloveModel(hparams)
-    region = 'abcdefg'
-    fc = _context_window(region, 2, 2)
-    for i in range(len(region)-1):
-        fc.__next__()
-    left_context, word, right_context = fc.__next__()
-    print(left_context, word, right_context)
+    corpus = []
+    with codecs.open('./data.txt', 'r', 'utf-8') as fin:
+        for line in fin.readlines():
+            corpus.append(line.strip())
+
+    model.generate_cooccurrence_matrix(corpus)
+    print(model.word_to_id)
+    print(model.cooccurrence_matrix)
